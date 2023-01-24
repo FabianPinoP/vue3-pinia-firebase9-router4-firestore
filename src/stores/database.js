@@ -19,6 +19,7 @@ export const useDatabaseStore = defineStore("database", {
   state: () => ({
     documents: [],
     loadingDocs: false,
+    loading: false,
   }),
   actions: {
     async getUrls() {
@@ -46,6 +47,7 @@ export const useDatabaseStore = defineStore("database", {
       }
     },
     async addUrl(name) {
+      this.loading = true;
       try {
         const objetcDoc = {
           name: name,
@@ -58,11 +60,14 @@ export const useDatabaseStore = defineStore("database", {
           ...objetcDoc,
         });
       } catch (error) {
-        console.log(error);
+        console.log(error.code);
+        return error.code;
       } finally {
+        this.loading = false;
       }
     },
     async deleteUrl(id) {
+      this.loading = true;
       try {
         const docRef = doc(db, "url", id);
         const docSnap = await getDoc(docRef);
@@ -76,8 +81,10 @@ export const useDatabaseStore = defineStore("database", {
         await deleteDoc(docRef);
         this.documents = this.documents.filter((doc) => doc.id !== id);
       } catch (error) {
-        console.log(error);
+        // console.log(error.message);
+        return error.message;
       } finally {
+        this.loading = false;
       }
     },
     async readUrl(id) {
@@ -98,6 +105,7 @@ export const useDatabaseStore = defineStore("database", {
       }
     },
     async updateUrl(id, name) {
+      this.loading = true;
       try {
         const docRef = doc(db, "url", id);
         const docSnap = await getDoc(docRef);
@@ -109,12 +117,16 @@ export const useDatabaseStore = defineStore("database", {
         }
         await updateDoc(docRef, {
           name: name,
-        });  
-        this.documents = this.documents.map(doc => doc.id === id ? ({...doc, name: name}): doc)
+        });
+        this.documents = this.documents.map((doc) =>
+          doc.id === id ? { ...doc, name: name } : doc
+        );
         router.push("/");
       } catch (error) {
-        console.log(error);
+        console.log(error.message);
+        return error.message;
       } finally {
+        this.loading = false;
       }
     },
   },
